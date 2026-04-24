@@ -242,7 +242,6 @@ public class ResourceParser {
             return TEXTAPPEARANCE_RESOURCES[id];
         }
 
-        /** 返回文字外观样式的总数 */
         public static int getResourcesSize() {
             return TEXTAPPEARANCE_RESOURCES.length;
         }

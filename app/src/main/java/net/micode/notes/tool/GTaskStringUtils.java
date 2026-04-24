@@ -100,7 +100,6 @@ public class GTaskStringUtils {
     public final static String GTASK_JSON_TYPE_GROUP = "GROUP";
     /** 类型常量：任务 */
     public final static String GTASK_JSON_TYPE_TASK = "TASK";
-    /** 用户 */
     public final static String GTASK_JSON_USER = "user";
 
     // ==================== MIUI 便签自定义 ====================

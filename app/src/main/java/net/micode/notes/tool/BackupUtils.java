@@ -325,13 +325,7 @@ public class BackupUtils {
         }
     }
 
-    /**
-     * 在 SD 卡上根据资源指定的路径和文件名模板生成文件
-     * @param context            上下文
-     * @param filePathResId      路径资源 ID（R.string.file_path）
-     * @param fileNameFormatResId 文件名格式资源 ID（R.string.file_name_txt_format）
-     * @return 生成的文件对象，失败返回 null
-     */
+
     private static File generateFileMountedOnSDcard(Context context, int filePathResId, int fileNameFormatResId) {
         StringBuilder sb = new StringBuilder();
         sb.append(Environment.getExternalStorageDirectory());
