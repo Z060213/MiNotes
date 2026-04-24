@@ -180,6 +180,12 @@ public class Notes {
          * <P> Type : INTEGER (long) </P>
          */
         public static final String VERSION = "version";
+
+        /**
+         * Pin flag: 0 = normal, 1 = pinned to top
+         * <P> Type: INTEGER </P>
+         */
+        public static final String IS_PINNED = "is_pinned";
     }
 
     public interface DataColumns {

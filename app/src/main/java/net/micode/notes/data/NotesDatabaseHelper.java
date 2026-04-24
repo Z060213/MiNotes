@@ -30,8 +30,8 @@ import net.micode.notes.data.Notes.NoteColumns;
 public class NotesDatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "note.db";
 
-    // 数据库版本从 4 升级到 5，增加软删除字段
-    private static final int DB_VERSION = 5;
+    // 数据库版本从 5 升级到 6，增加置顶字段
+    private static final int DB_VERSION = 6;
 
     public interface TABLE {
         public static final String NOTE = "note";
@@ -43,7 +43,7 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
 
     private static NotesDatabaseHelper mInstance;
 
-    // 建表语句，最后增加了 is_deleted 和 deleted_time 两个字段
+    // 建表语句，增加了 is_deleted、deleted_time 以及新的 is_pinned 字段
     private static final String CREATE_NOTE_TABLE_SQL =
             "CREATE TABLE " + TABLE.NOTE + "(" +
                     NoteColumns.ID + " INTEGER PRIMARY KEY," +
@@ -64,7 +64,8 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
                     NoteColumns.GTASK_ID + " TEXT NOT NULL DEFAULT ''," +
                     NoteColumns.VERSION + " INTEGER NOT NULL DEFAULT 0," +
                     "is_deleted INTEGER NOT NULL DEFAULT 0," +
-                    "deleted_time INTEGER NOT NULL DEFAULT 0" +
+                    "deleted_time INTEGER NOT NULL DEFAULT 0," +
+                    "is_pinned INTEGER NOT NULL DEFAULT 0" +
                     ")";
 
     private static final String CREATE_DATA_TABLE_SQL =
@@ -326,9 +327,15 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
             oldVersion++;
         }
 
-        // 新增：从版本4升级到版本5（增加软删除字段）
+        // 从版本4升级到版本5（增加软删除字段）
         if (oldVersion == 4) {
             upgradeToV5(db);
+            oldVersion++;
+        }
+
+        // 新增：从版本5升级到版本6（增加置顶字段）
+        if (oldVersion == 5) {
+            upgradeToV6(db);
             oldVersion++;
         }
 
@@ -370,7 +377,7 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
                 + " INTEGER NOT NULL DEFAULT 0");
     }
 
-    // 新增：升级到版本5，添加软删除字段
+    // 升级到版本5：添加软删除字段
     private void upgradeToV5(SQLiteDatabase db) {
         try {
             db.execSQL("ALTER TABLE " + TABLE.NOTE + " ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0");
@@ -378,6 +385,17 @@ public class NotesDatabaseHelper extends SQLiteOpenHelper {
             Log.d(TAG, "Upgrade to version 5: added is_deleted and deleted_time columns");
         } catch (Exception e) {
             Log.e(TAG, "Failed to upgrade to version 5", e);
+            throw e;
+        }
+    }
+
+    // 新增：升级到版本6：添加置顶字段
+    private void upgradeToV6(SQLiteDatabase db) {
+        try {
+            db.execSQL("ALTER TABLE " + TABLE.NOTE + " ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0");
+            Log.d(TAG, "Upgrade to version 6: added is_pinned column");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to upgrade to version 6", e);
             throw e;
         }
     }

@@ -235,17 +235,23 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
         private DropdownMenu mDropDownMenu;
         private ActionMode mActionMode;
         private MenuItem mMoveMenu;
+        private MenuItem mPinMenu; // 置顶菜单项
 
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             getMenuInflater().inflate(R.menu.note_list_options, menu);
             menu.findItem(R.id.delete).setOnMenuItemClickListener(this);
             mMoveMenu = menu.findItem(R.id.move);
+            mPinMenu = menu.findItem(R.id.menu_pin); // 获取置顶菜单项
             if (mFocusNoteDataItem.getParentId() == Notes.ID_CALL_RECORD_FOLDER
                     || DataUtils.getUserFolderCount(mContentResolver) == 0) {
                 mMoveMenu.setVisible(false);
             } else {
                 mMoveMenu.setVisible(true);
                 mMoveMenu.setOnMenuItemClickListener(this);
+            }
+            // 置顶菜单始终可见
+            if (mPinMenu != null) {
+                mPinMenu.setOnMenuItemClickListener(this);
             }
             mActionMode = mode;
             mNotesListAdapter.setChoiceMode(true);
@@ -339,6 +345,10 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             } else if (itemId == R.id.move) {
                 startQueryDestinationFolders();
                 return true;
+            } else if (itemId == R.id.menu_pin) {
+                // 置顶操作：将选中的笔记置顶（is_pinned = 1）
+                pinSelectedNotes(true);
+                return true;
             }
             return false;
         }
@@ -409,10 +419,12 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
     private void startAsyncNotesListQuery() {
         String selection = (mCurrentFolderId == Notes.ID_ROOT_FOLDER) ? ROOT_FOLDER_SELECTION
                 : NORMAL_SELECTION;
+        // 修改排序：置顶笔记排在前面，然后按类型和修改时间排序
+        String sortOrder = NoteColumns.IS_PINNED + " DESC, " + NoteColumns.TYPE + " DESC, " + NoteColumns.MODIFIED_DATE + " DESC";
         mBackgroundQueryHandler.startQuery(FOLDER_NOTE_LIST_QUERY_TOKEN, null,
                 Notes.CONTENT_NOTE_URI, NoteItemData.PROJECTION, selection, new String[] {
                         String.valueOf(mCurrentFolderId)
-                }, NoteColumns.TYPE + " DESC," + NoteColumns.MODIFIED_DATE + " DESC");
+                }, sortOrder);
     }
 
     private final class BackgroundQueryHandler extends AsyncQueryHandler {
@@ -500,6 +512,46 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
                     }
                 }
                 mModeCallBack.finishActionMode();
+            }
+        }.execute();
+    }
+
+    /**
+     * 批量置顶或取消置顶选中的笔记
+     * @param pinned true=置顶，false=取消置顶
+     */
+    private void pinSelectedNotes(final boolean pinned) {
+        final HashSet<Long> selectedIds = mNotesListAdapter.getSelectedItemIds();
+        if (selectedIds.isEmpty()) {
+            Toast.makeText(this, getString(R.string.menu_select_none), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                ContentValues values = new ContentValues();
+                values.put(NoteColumns.IS_PINNED, pinned ? 1 : 0);
+                values.put(NoteColumns.LOCAL_MODIFIED, 1);
+                // 版本号自增，用于同步
+                values.put(NoteColumns.VERSION, NoteColumns.VERSION + " + 1");
+
+                for (Long id : selectedIds) {
+                    mContentResolver.update(Notes.CONTENT_NOTE_URI, values,
+                            NoteColumns.ID + "=?", new String[]{String.valueOf(id)});
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+                // 刷新列表
+                startAsyncNotesListQuery();
+                // 退出多选模式
+                mModeCallBack.finishActionMode();
+                Toast.makeText(NotesListActivity.this,
+                        pinned ? R.string.pin_success : R.string.unpin_success,
+                        Toast.LENGTH_SHORT).show();
             }
         }.execute();
     }
@@ -795,7 +847,7 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             createNewNote();
         } else if (itemId == R.id.menu_search) {
             onSearchRequested();
-        } else if (itemId == R.id.action_trash) {   // 新增：处理回收站菜单点击
+        } else if (itemId == R.id.action_trash) {   // 处理回收站菜单点击
             startActivity(new Intent(this, TrashActivity.class));
             return true;
         }

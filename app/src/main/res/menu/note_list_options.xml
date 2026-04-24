@@ -15,8 +15,7 @@
      limitations under the License.
 -->
 
-<menu
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/move"
         android:title="@string/menu_move"
@@ -27,5 +26,12 @@
         android:id="@+id/delete"
         android:title="@string/menu_delete"
         android:icon="@drawable/menu_delete"
+        android:showAsAction="always|withText" />
+
+    <!-- 新增置顶菜单项，使用系统图标（避免添加额外资源） -->
+    <item
+        android:id="@+id/menu_pin"
+        android:title="@string/menu_pin"
+        android:icon="@android:drawable/ic_menu_upload"
         android:showAsAction="always|withText" />
 </menu>
