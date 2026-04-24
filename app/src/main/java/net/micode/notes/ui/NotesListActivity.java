@@ -795,6 +795,9 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             createNewNote();
         } else if (itemId == R.id.menu_search) {
             onSearchRequested();
+        } else if (itemId == R.id.action_trash) {   // 新增：处理回收站菜单点击
+            startActivity(new Intent(this, TrashActivity.class));
+            return true;
         }
         return true;
     }

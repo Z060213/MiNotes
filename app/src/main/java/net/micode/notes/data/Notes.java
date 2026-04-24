@@ -20,6 +20,7 @@
 package net.micode.notes.data;
 
 import android.net.Uri;
+
 public class Notes {
     /** ContentProvider 的 authority 标识 */
     public static final String AUTHORITY = "micode_notes";
@@ -68,6 +69,12 @@ public class Notes {
      * Uri to query data
      */
     public static final Uri CONTENT_DATA_URI = Uri.parse("content://" + AUTHORITY + "/data");
+
+    /**
+     * Uri to query trash notes (soft deleted)
+     * 回收站笔记的查询 URI
+     */
+    public static final Uri CONTENT_TRASH_URI = Uri.parse("content://" + AUTHORITY + "/trash");
 
     public interface NoteColumns {
         /**
